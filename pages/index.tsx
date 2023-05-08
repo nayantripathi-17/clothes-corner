@@ -14,12 +14,14 @@ import ProductCarousel from '../components/ProductCarousel'
 import Socials from '../components/Socials'
 import Features from '../components/Features'
 import Footer from '../components/Footer'
+import { GetServerSidePropsContext, InferGetServerSidePropsType } from 'next'
+import { shopifyInit } from '../lib/shopify/shopifyInit'
 
 const inter = Inter({ subsets: ['latin'] })
 
-export default function Home() {
+export default function Home({ products }: InferGetServerSidePropsType<typeof getServerSideProps>) {
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen bg-white min-w-fit">
       <Navbar
         pages={["Men", "Women", "Accessories", "New In", "Disney", "Marvel", "Contact"]}
         logo_URL={Logo}
@@ -37,10 +39,10 @@ export default function Home() {
         <Categories title="Categories" />
       </div>
       <div className="text-center py-10">
-        <ProductCarousel title="New In" />
+        <ProductCarousel title="New In" products={JSON.parse(products)} />
       </div>
       <div className="text-center py-10">
-        <ProductCarousel title="Best Sellers" />
+        <ProductCarousel title="Best Sellers" products={JSON.parse(products)} />
       </div>
       <Socials />
       <div className="flex px-16 py-10">
@@ -89,8 +91,18 @@ export default function Home() {
           }
         ]
         } />
-
-
     </main>
   )
+}
+
+export async function getServerSideProps() {
+  const { shopify, session } = await shopifyInit();
+  const products = await shopify?.rest.Product.all({ session });
+
+
+  return {
+    props: {
+      products: JSON.stringify(products.data)
+    },
+  };
 }

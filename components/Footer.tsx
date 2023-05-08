@@ -24,9 +24,9 @@ export default function FooterLinks({ logo_URL, data }: FooterLinksProps) {
 
 
     return (
-        <footer className="bg-black py-20 px-36 justify-between">
-            <div className="flex justify-between flex-grow">
-                <div className="">
+        <footer className="bg-black p-10 lg:py-20 lg:px-36">
+            <div className="flex flex-col items-center md:flex-row md:justify-between md:flex-grow md:space-y-0 space-y-5">
+                <div className="flex flex-col items-center">
                     <Image
                         className="invert my-5"
                         src={logo_URL}
@@ -52,8 +52,8 @@ export default function FooterLinks({ logo_URL, data }: FooterLinksProps) {
                         return (
                             <div key={index} className="space-y-1">
                                 <p className="text-white font-bold text-xl mb-3">{group.title}</p>
-                                {group?.links?.map((link) => {
-                                    return (<p key={link.link} className="text-gray-400 text-sm cursor-pointer" onClick={() => { Router.push(link.link) }}>{link.label}</p>)
+                                {group?.links?.map((link,index) => {
+                                    return (<p key={index} className="text-gray-400 text-sm cursor-pointer" onClick={() => { Router.push(link.link) }}>{link.label}</p>)
                                 })}
                             </div>
                         )
