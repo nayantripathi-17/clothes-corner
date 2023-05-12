@@ -1,10 +1,9 @@
 import { ActionIcon, NumberInput, NumberInputHandlers } from '@mantine/core'
 import { useViewportSize } from '@mantine/hooks';
-import React, { useRef, useState } from 'react'
+import React, { Dispatch, SetStateAction, useRef, useState } from 'react'
 
-function QuantityCounter({ max }: { max: number | null | undefined }) {
+function QuantityCounter({ max, quantity, setQuantity }: { max: number | null | undefined, quantity: number, setQuantity: Dispatch<SetStateAction<number>> }) {
 
-    const [value, setValue] = useState<number | ''>(0);
     const handlers = useRef<NumberInputHandlers>();
     const { width, height } = useViewportSize()
 
@@ -16,11 +15,11 @@ function QuantityCounter({ max }: { max: number | null | undefined }) {
                 <ActionIcon size={42} variant="default" onClick={() => handlers.current.decrement()}>-</ActionIcon>
                 <NumberInput
                     hideControls
-                    value={value}
-                    onChange={(val) => setValue(val)}
+                    value={quantity}
+                    onChange={(val) => setQuantity(val === "" ? 1 : val)}
                     handlersRef={handlers}
                     max={max ? max : undefined}
-                    min={0}
+                    min={1}
                     step={1}
                     className={`text-center ${width > 1100 ? "w-1/12" : "w-1/6"}`}
                     classNames={

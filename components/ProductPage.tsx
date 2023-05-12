@@ -1,15 +1,21 @@
-import { NumberInput } from "@mantine/core"
 import { Product } from "@shopify/shopify-api/rest/admin/2023-04/product"
 import { Variant } from "@shopify/shopify-api/rest/admin/2023-04/variant"
 import Image from "next/image"
-import { useEffect, useState } from "react"
+import { MutableRefObject, useEffect, useState } from "react"
 import QuantityCounter from "./QuantityCounter"
 import { useViewportSize } from "@mantine/hooks"
 import { Carousel } from "@mantine/carousel"
+import { initDB } from "../lib/firebase/intiDB"
+import { arrayUnion, collection, doc, setDoc, updateDoc } from "firebase/firestore"
+import { useSession } from "next-auth/react"
 
-function ProductPage({ product }: { product: Product }) {
+{/*@ts-ignore*/ }
+function ProductPage({ product, getRef }: { product: Product, ref: MutableRefObject<HTMLButtonElement> }) {
 
     const { width, height } = useViewportSize();
+    const { data: session, status } = useSession();
+
+
 
     const [selectedImage, setSelectedImage] = useState<string>(Array.isArray(product.images) ? product?.images[0]?.src : "")
     const [variantsAvailable, setVariantsAvailable] = useState<Map<string, Variant>>(new Map())
@@ -23,6 +29,7 @@ function ProductPage({ product }: { product: Product }) {
             //@ts-ignore
             option3: (product?.options?.[2]?.values[0]) ? String(product?.options?.[2]?.values[0]).toLowerCase() : null,
         })
+    const [quantity, setQuantity] = useState<number>(1)
 
     useEffect(() => {
         if (!product.variants) return
@@ -52,7 +59,6 @@ function ProductPage({ product }: { product: Product }) {
     const changeOption = (event, { value, indexOption }: { value: string, indexOption: number }) => {
         try {
 
-            // const optionName = String(event.currentTarget.getAtrtibute("optionName")).toLowerCase()
             const optionValue = value.trim().toLowerCase()
             const optionNumber = `option${indexOption + 1}`
 
@@ -61,6 +67,34 @@ function ProductPage({ product }: { product: Product }) {
         } catch (err) {
             console.log(err)
         }
+    }
+
+    const addToCart = async () => {
+        try {
+            if (!session) {
+                getRef.current.click()
+                return;
+            }
+
+            const db = await initDB();
+            {/*@ts-ignore*/}
+            const cartRef = doc(db, "cart", `${session?.user?.phone}`)
+
+            const productObj = {
+                //@ts-ignore
+                image: String(product?.images?.[0]?.src),
+                productName: String(product.title),
+                variant: JSON.stringify(selectedVariant),
+                quantity: quantity
+            }
+
+            await setDoc(cartRef, {
+                [String(selectedVariant?.id)]: productObj
+            }, { merge: true })
+
+            return
+        }
+        catch (err) { }
     }
 
 
@@ -136,6 +170,7 @@ function ProductPage({ product }: { product: Product }) {
             <div className="lg:w-1/2 p-10 lg:overflow-y-scroll scrollbar-hide">
                 <p className="uppercase text-4xl">{product.title}</p>
                 <p className="capitalize text-lg pt-2">₹ {selectedVariant?.price}</p>
+                <p className="text-lg pt-2">{(selectedVariant?.admin_graphql_api_id)}</p>
                 <hr className="h-px bg-gray-300 border-0 my-4" />
                 {/*@ts-ignore*/}
                 {product.options?.map((option, indexOption: number) => {
@@ -156,7 +191,8 @@ function ProductPage({ product }: { product: Product }) {
                         </div>
                     )
                 })}
-                <QuantityCounter max={selectedVariant?.inventory_quantity} />
+                <QuantityCounter max={selectedVariant?.inventory_quantity} quantity={quantity} setQuantity={setQuantity} />
+                <button className="w-full md:w-1/2 py-2 mt-4 border-black border-2 font-semibold tracking-wider hover:bg-gray-100" onClick={addToCart}>Add To Cart</button>
             </div>
         </div>
     )

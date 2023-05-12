@@ -16,13 +16,19 @@ import Features from '../components/Features'
 import Footer from '../components/Footer'
 import { GetServerSidePropsContext, InferGetServerSidePropsType } from 'next'
 import { shopifyInit } from '../lib/shopify/shopifyInit'
+import { useRef } from 'react'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export default function Home({ products }: InferGetServerSidePropsType<typeof getServerSideProps>) {
+
+  const ref = useRef<HTMLButtonElement>(null)
+
   return (
     <main className="min-h-screen bg-white min-w-fit">
       <Navbar
+        //@ts-ignore
+        getRef={ref}
         pages={["Men", "Women", "Accessories", "New In", "Disney", "Marvel", "Contact"]}
         logo_URL={Logo}
       />

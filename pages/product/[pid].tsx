@@ -5,19 +5,26 @@ import Footer from '../../components/Footer'
 import { GetServerSidePropsContext, InferGetServerSidePropsType } from 'next'
 import { shopifyInit } from '../../lib/shopify/shopifyInit'
 import ProductPage from '../../components/ProductPage'
+import { RefObject, useRef } from 'react'
 
 
 export default function ProductId({ product }: InferGetServerSidePropsType<typeof getServerSideProps>) {
+
+    const ref = useRef<HTMLButtonElement>(null)
+
     return (
 
         <main className="bg-white min-w-fit min-h-screen">
             <Navbar
+                //@ts-ignore
+                getRef={ref}
                 pages={["Men", "Women", "Accessories", "New In", "Disney", "Marvel", "Contact"]}
                 logo_URL={Logo}
             />
 
             <div className="">
-                <ProductPage product={JSON.parse(product)} />
+                {/* @ts-ignore */}
+                <ProductPage product={JSON.parse(product)} getRef={ref} />
             </div>
             <Footer
                 logo_URL={Logo}

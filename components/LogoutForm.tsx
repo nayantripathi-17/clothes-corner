@@ -18,8 +18,10 @@ function LogoutForm() {
     return (
         <div className="text-black flex justify-center flex-grow">
             <div>
-            {/*@ts-ignore*/}
+                {/*@ts-ignore*/}
                 <p>{session?.user?.phone}</p>
+                {/*@ts-ignore*/}
+                <p>{session?.user?.customer_id}</p>
                 <Button className="bg-red-600 hover:bg-red-700" onClick={() => logOut()}>Logout</Button>
             </div>
         </div>

@@ -36,7 +36,7 @@ function LoginForm() {
       setIsIncorrectOtp(false)
       const res = await confirmationResult.confirm(otp.toString())
 
-      signIn("credentials", { phone: phone.toString() })
+      signIn("credentials", { phone: `+91${phone.toString()}` })
 
     } catch (err) {
       setIsIncorrectOtp(true)
