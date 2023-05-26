@@ -25,7 +25,7 @@ export default function Home({ products }: InferGetServerSidePropsType<typeof ge
   const ref = useRef<HTMLButtonElement>(null)
 
   return (
-    <main className="min-h-screen bg-white min-w-fit">
+    <main className="min-h-screen bg-white">
       <Navbar
         //@ts-ignore
         getRef={ref}
@@ -51,7 +51,7 @@ export default function Home({ products }: InferGetServerSidePropsType<typeof ge
         <ProductCarousel title="Best Sellers" products={JSON.parse(products)} />
       </div>
       <Socials />
-      <div className="flex px-16 py-10">
+      <div className="grid grid-cols-1 space-y-10 lg:space-y-0 lg:grid-cols-3 px-16 py-10">
         <Features
           source="https://assets.bonkerscorner.com/uploads/2021/10/25134929/shipping_under_48.jpg"
           title="SHIPPING WITHIN 48 HOURS"

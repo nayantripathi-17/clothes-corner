@@ -6,8 +6,13 @@ import QuantityCounter from "./QuantityCounter"
 import { useViewportSize } from "@mantine/hooks"
 import { Carousel } from "@mantine/carousel"
 import { initDB } from "../lib/firebase/intiDB"
-import { arrayUnion, collection, doc, setDoc, updateDoc } from "firebase/firestore"
+import { deleteField, doc, getDoc, setDoc } from "firebase/firestore"
 import { useSession } from "next-auth/react"
+import FavoriteBorderOutlinedIcon from '@mui/icons-material/FavoriteBorderOutlined';
+import FavoriteOutlinedIcon from '@mui/icons-material/FavoriteOutlined';
+import { Button } from "@mantine/core"
+import { addCartLine } from "../lib/gql/mutateCartQuery"
+
 
 {/*@ts-ignore*/ }
 function ProductPage({ product, getRef }: { product: Product, ref: MutableRefObject<HTMLButtonElement> }) {
@@ -29,7 +34,8 @@ function ProductPage({ product, getRef }: { product: Product, ref: MutableRefObj
             //@ts-ignore
             option3: (product?.options?.[2]?.values[0]) ? String(product?.options?.[2]?.values[0]).toLowerCase() : null,
         })
-    const [quantity, setQuantity] = useState<number>(1)
+    const [quantity, setQuantity] = useState<number>(selectedVariant?.inventory_quantity === 0 ? 0 : 1)
+    const [isWishlisted, setIsWishlisted] = useState<boolean>(false)
 
     useEffect(() => {
         if (!product.variants) return
@@ -40,7 +46,36 @@ function ProductPage({ product, getRef }: { product: Product, ref: MutableRefObj
 
         setVariantsAvailable(variantsAvailable)
 
-    }, [product, variantsAvailable])
+        const checkWIshlistedStatus = async () => {
+            try {
+                if (!session) {
+                    setIsWishlisted(false)
+                    return;
+                }
+
+                const db = await initDB();
+                {/*@ts-ignore*/ }
+                const wishlistRef = doc(db, "wishlist", `${session?.user?.phone}`)
+                const wishlistProducts = (await getDoc(wishlistRef)).data();
+
+                if (wishlistProducts) {
+                    const res = Object.keys(wishlistProducts).find(key => key === String(product.id))
+                    if (res) {
+                        setIsWishlisted(true)
+                        return
+                    }
+                }
+
+                setIsWishlisted(false)
+                return
+            }
+            catch (err) { }
+        }
+
+
+        checkWIshlistedStatus();
+
+    }, [product, variantsAvailable, session, getRef])
 
     useEffect(() => {
         if (!product.variants) return
@@ -52,8 +87,11 @@ function ProductPage({ product, getRef }: { product: Product, ref: MutableRefObj
         const variant = variantsAvailable.get(`${option1}${option2}${option3}`)
 
         setSelectedVariant(variant ? variant : null)
+        setQuantity(variant?.inventory_quantity === 0 ? 0 : 1)
+
 
     }, [selectedOptions, product.variants, variantsAvailable])
+
 
     //@ts-ignore
     const changeOption = (event, { value, indexOption }: { value: string, indexOption: number }) => {
@@ -77,20 +115,57 @@ function ProductPage({ product, getRef }: { product: Product, ref: MutableRefObj
             }
 
             const db = await initDB();
-            {/*@ts-ignore*/}
+            {/*@ts-ignore*/ }
             const cartRef = doc(db, "cart", `${session?.user?.phone}`)
+            //@ts-ignore
+            const { cartDetails: { cartId } } = (await getDoc(cartRef)).data();
+
+            const cartRes = await addCartLine([{ quantity, merchandiseId: String(selectedVariant?.admin_graphql_api_id) }], String(cartId));
 
             const productObj = {
                 //@ts-ignore
                 image: String(product?.images?.[0]?.src),
                 productName: String(product.title),
                 variant: JSON.stringify(selectedVariant),
-                quantity: quantity
+                quantity: quantity,
+                //@ts-ignore
+                cartLineId: cartRes?.body?.data?.cartLinesAdd?.cart?.lines?.edges?.[0]?.node?.id
             }
 
             await setDoc(cartRef, {
                 [String(selectedVariant?.id)]: productObj
             }, { merge: true })
+
+            return
+        }
+        catch (err) { }
+    }
+
+    const addOrRemoveWishlist = async () => {
+        try {
+            if (!session) {
+                getRef.current.click()
+                return;
+            }
+
+            const db = await initDB();
+            {/*@ts-ignore*/ }
+            const wishlistRef = doc(db, "wishlist", `${session?.user?.phone}`)
+
+            if (isWishlisted) {
+                const newDoc = { [String(product.id)]: deleteField() }
+                await setDoc(wishlistRef, newDoc, { merge: true });
+                setIsWishlisted(false)
+            }
+            else {
+                const productObj = {
+                    product: JSON.stringify(product)
+                }
+                await setDoc(wishlistRef, {
+                    [String(product.id)]: productObj
+                }, { merge: true })
+                setIsWishlisted(true)
+            }
 
             return
         }
@@ -168,7 +243,14 @@ function ProductPage({ product, getRef }: { product: Product, ref: MutableRefObj
                 }
             </div>
             <div className="lg:w-1/2 p-10 lg:overflow-y-scroll scrollbar-hide">
-                <p className="uppercase text-4xl">{product.title}</p>
+                <div className="flex items-end justify-between">
+                    <p className="uppercase text-4xl">{product.title}</p>
+                    {!isWishlisted ?
+                        <p className="hover:scale-110 cursor-pointer" onClick={() => addOrRemoveWishlist()}><FavoriteBorderOutlinedIcon className="text-red-500" fontSize="large" /></p>
+                        :
+                        <p className="hover:scale-110 cursor-pointer" onClick={() => addOrRemoveWishlist()}><FavoriteOutlinedIcon className="text-red-500" fontSize="large" /></p>
+                    }
+                </div>
                 <p className="capitalize text-lg pt-2">₹ {selectedVariant?.price}</p>
                 <p className="text-lg pt-2">{(selectedVariant?.admin_graphql_api_id)}</p>
                 <hr className="h-px bg-gray-300 border-0 my-4" />
@@ -192,7 +274,12 @@ function ProductPage({ product, getRef }: { product: Product, ref: MutableRefObj
                     )
                 })}
                 <QuantityCounter max={selectedVariant?.inventory_quantity} quantity={quantity} setQuantity={setQuantity} />
-                <button className="w-full md:w-1/2 py-2 mt-4 border-black border-2 font-semibold tracking-wider hover:bg-gray-100" onClick={addToCart}>Add To Cart</button>
+                <div>
+                    <button disabled={selectedVariant?.inventory_quantity === 0 ? true : false} className="w-full md:w-1/2 py-2 mt-4 border-black rounded-none border-2 font-semibold tracking-wider hover:bg-gray-100 cursor-pointer" onClick={addToCart}>Add To Cart</button>
+                </div>
+                <div>
+                    <button disabled={selectedVariant?.inventory_quantity === 0 ? true : false} className="w-full md:w-1/2 py-2 mt-4 border-black rounded-none border-2 bg-black text-white font-semibold tracking-wider hover:bg-gray-900 cursor-pointer" onClick={addToCart}>Buy Now</button>
+                </div>
             </div>
         </div>
     )

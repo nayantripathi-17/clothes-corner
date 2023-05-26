@@ -14,7 +14,7 @@ export default function ProductId({ product }: InferGetServerSidePropsType<typeo
 
     return (
 
-        <main className="bg-white min-w-fit min-h-screen">
+        <main className="bg-white min-w-fit">
             <Navbar
                 //@ts-ignore
                 getRef={ref}

@@ -1,7 +1,7 @@
 import '@shopify/shopify-api/adapters/node';
 import { shopifyApi, LATEST_API_VERSION, Session } from "@shopify/shopify-api"
 import { restResources } from '@shopify/shopify-api/rest/admin/2023-04'
-import { randomUUID } from 'crypto';
+import {v4 as uuidv4} from 'uuid';
 
 const shopify = shopifyApi({
     apiKey: String(process.env.NEXT_PUBLIC_SHOPIFY_API_KEY),
@@ -15,7 +15,7 @@ const shopify = shopifyApi({
 })
 
 const session = new Session({
-    id: randomUUID(),
+    id: uuidv4(),
     state: 'state',
     shop: String(shopify.utils.sanitizeShop(String(process.env.NEXT_PUBLIC_SHOP), true)),
     isOnline: true,

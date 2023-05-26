@@ -1,8 +1,9 @@
-import { Burger, Header, Menu, Modal, Title } from "@mantine/core"
+import { Burger, Drawer, Header, Menu, Modal, Title } from "@mantine/core"
 import Image from "next/image"
 import SearchIcon from '@mui/icons-material/SearchOutlined';
 import LocalMallIcon from '@mui/icons-material/LocalMallOutlined';
 import PersonOutlineOutlinedIcon from '@mui/icons-material/PersonOutlineOutlined';
+import FavoriteBorderOutlinedIcon from '@mui/icons-material/FavoriteBorderOutlined';
 import { NavbarProps } from "../types";
 import { useDisclosure } from "@mantine/hooks";
 import LoginForm from "./LoginForm";
@@ -10,19 +11,23 @@ import { useSession } from "next-auth/react";
 import LogoutForm from "./LogoutForm";
 import { useRouter } from "next/router";
 import { useViewportSize } from '@mantine/hooks';
-import Cart from "./Cart";
+import CartMini from "./CartMini";
 import { initDB } from "../lib/firebase/intiDB";
-import { deleteField, doc, getDoc, updateDoc } from "firebase/firestore";
+import { deleteField, doc, getDoc, setDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
+import { fetchCart, removeCartLine } from "../lib/gql/mutateCartQuery";
 
 function Navbar({ pages, logo_URL, getRef }: NavbarProps) {
 
   const { height, width } = useViewportSize()
 
   const [openedBurger, { toggle }] = useDisclosure(false);
+  const [openedDrawer, { open: openDrawer, close: closeDrawer }] = useDisclosure(false);
+  const [openedCartDrawer, { open: openCartDrawer, close: closeCartDrawer }] = useDisclosure(false);
   const [opened, { open, close }] = useDisclosure(false);
   const { data: session, status } = useSession()
   const [cart, setCart] = useState<{}>({})
+  const [subTotal, setSubTotal] = useState<number>(0)
 
   const router = useRouter()
 
@@ -40,11 +45,21 @@ function Navbar({ pages, logo_URL, getRef }: NavbarProps) {
         return
       }
 
-      Object.keys(cartProducts).forEach((variantId) => {
+      const shopifyCart = await fetchCart(String(cartProducts?.cartDetails.cartId))
+      //@ts-ignore
+      setSubTotal(shopifyCart?.body?.data?.cart?.cost?.subtotalAmount?.amount)
+
+      Object.keys(cartProducts).filter(key => key != "cartDetails").forEach((variantId) => {
         (cartProducts[variantId]).variant = JSON.parse((cartProducts[variantId]).variant)
       })
 
-      const sortedCartProducts = Object.keys(cartProducts).sort().reduce((acc, key) => {
+      //@ts-ignore
+      shopifyCart?.body?.data?.cart?.lines?.edges?.forEach((item) => {
+        cartProducts[String(item?.node?.merchandise?.id).slice("gid://shopify/ProductVariant/".length)].actualPriceTotal = Number(item?.node?.cost?.totalAmount?.amount)
+        cartProducts[String(item?.node?.merchandise?.id).slice("gid://shopify/ProductVariant/".length)].actualPricePerUnit = (Number(item?.node?.cost?.totalAmount?.amount) / Number(item?.node?.quantity)).toFixed(2)
+      })
+
+      const sortedCartProducts = Object.keys(cartProducts).filter(key => key != "cartDetails").sort().reduce((acc, key) => {
         //@ts-ignore
         acc[key] = cartProducts[key]
         return acc;
@@ -64,9 +79,21 @@ function Navbar({ pages, logo_URL, getRef }: NavbarProps) {
       const db = await initDB();
       // @ts-ignore
       const variantRef = doc(db, 'cart', `${session?.user?.phone}`);
+      const cartProducts = (await getDoc(variantRef)).data()
+
+      if (cartProducts === undefined) return
+
+      const lineIds: string[] = [];
+      Object.keys(cartProducts).forEach((key) => {
+        if (key === variantId) lineIds.push(String(cartProducts[key]?.cartLineId))
+      })
+      console.log(lineIds)
+      const cartId = cartProducts?.cartDetails.cartId
+
+      const cartRes = await removeCartLine(lineIds, cartId)
       const newDoc = { [variantId]: deleteField() }
 
-      await updateDoc(variantRef, newDoc);
+      await setDoc(variantRef, newDoc, { merge: true });
       await getCart();
 
     } catch (err) { }
@@ -86,17 +113,28 @@ function Navbar({ pages, logo_URL, getRef }: NavbarProps) {
           }
         </div>
         :
-        <Menu opened={openedBurger}>
-          <Menu.Target>
-            <Burger opened={openedBurger} onClick={toggle} />
-          </Menu.Target>
-          <Menu.Dropdown>
-            {pages.map((page) => {
-              return <Menu.Item key={page} className="align-middle text-sm">{page}</Menu.Item>
-            })
+        <>
+          <Burger opened={openedBurger} onClick={() => { toggle(); openDrawer(); }} />
+          <Drawer
+            opened={openedDrawer}
+            onClose={() => { closeDrawer(); toggle(); }}
+            overlayProps={{ opacity: 0.7, blur: 4 }}
+            size="90%"
+            closeButtonProps={
+              { size: "xl", title: "Close Drawer", variant: "light" }
             }
-          </Menu.Dropdown>
-        </Menu>
+            classNames={
+              { close: "text-black" }
+            }
+          >
+            <div className="space-y-10 text-2xl pl-4 uppercase font-semibold">
+              {pages.map((page) => {
+                return <p key={page} className="hover:text-gray-500">{page}</p>
+              })
+              }
+            </div>
+          </Drawer>
+        </>
       }
 
       <div className={`${width > 1380 ? "absolute right-[45%]" : ""}`}>
@@ -107,17 +145,35 @@ function Navbar({ pages, logo_URL, getRef }: NavbarProps) {
           onClick={() => router.push("/")}
         />}
       </div>
-      <div className="space-x-4">
+      <div className="space-x-4 min-w-fit">
         <SearchIcon className="text-black" />
-        <Menu position="bottom-end" onOpen={() => getCart()}>
-          <Menu.Target>
-            <LocalMallIcon className="text-black cursor-pointer" />
-          </Menu.Target>
-          <Menu.Dropdown className="border-2 border-black p-0 m-0">
-            <Cart cart={cart} removeFromCart={removeFromCart} />
-          </Menu.Dropdown>
-        </Menu>
-        <button className="text-black cursor-pointer" onClick={open} ref={getRef}>
+        <FavoriteBorderOutlinedIcon className="text-black cursor-pointer hover:scale-110" />
+        <LocalMallIcon className="text-black cursor-pointer hover:scale-110"
+          onClick={router.pathname !== "/cart" ? async () => { getCart(); openCartDrawer() } : () => { router.reload() }}
+        />
+        {router.pathname !== "/cart" &&
+          <Drawer
+            opened={openedCartDrawer}
+            onClose={closeCartDrawer}
+            position="right"
+            title="Cart"
+            closeButtonProps={
+              { size: "xl", title: "Close Drawer", variant: "light" }
+            }
+            classNames={
+              {
+                body: "p-0",
+                close: "text-black",
+                title: "text-center font-medium text-xl uppercase text-gray-500",
+                content: "min-h-screen scrollbar-hide overflow-y-scroll"
+              }
+            }
+            size={width >= 768 ? (width >= 1024) ? (width >= 1440) ? "40%" : "50%" : "70%" : "100%"}
+          >
+            <CartMini cart={cart} removeFromCart={removeFromCart} subTotal={subTotal} />
+          </Drawer>
+        }
+        <button className="text-black cursor-pointer hover:scale-110" onClick={open} ref={getRef}>
           <PersonOutlineOutlinedIcon />
         </button>
         {session ?

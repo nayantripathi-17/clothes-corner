@@ -45,3 +45,68 @@ export declare interface authorizeType {
     credentials: CredentialType,
     req: Pick<RequestInternal, "body" | "query" | "headers" | "method">
 }
+
+export declare interface CartObject {
+    [key: string]: {
+        variant: {
+            [key: string]: string
+        },
+        quantity: number,
+        image: string,
+        productName: string,
+        actualPricePerUnit: number,
+        actualPriceTotal: number,
+    }
+}
+
+export declare interface CartProductProps {
+    variantId: string,
+    imgSrc: string,
+    productName: string,
+    quantity: number,
+    productTitle: string,
+    price: number,
+    actualPricePerUnit: number
+    removeFromCart: (variantId: string) => Promise<void>,
+    actualPriceTotal: number
+}
+
+export declare interface AddressComponentProps {
+    address: {
+        streetAddressLine1: string;
+        streetAddressLine2: string;
+        city: string;
+        state: string;
+        zip: string;
+    },
+    setAddress: React.Dispatch<React.SetStateAction<{
+        streetAddressLine1: string;
+        streetAddressLine2: string;
+        city: string;
+        state: string;
+        zip: string;
+    }>>,
+    disabled: boolean
+}
+
+export declare interface CustomerDetails {
+    title: "mr" | "mrs" | "ms",
+    fName: string,
+    lName: string,
+    email: string,
+    phone: string,
+    shippingAddress:{
+        streetAddressLine1: string;
+        streetAddressLine2: string;
+        city: string;
+        state: string;
+        zip: string;
+    },
+    billingAddress:{
+        streetAddressLine1: string;
+        streetAddressLine2: string;
+        city: string;
+        state: string;
+        zip: string;
+    }
+}

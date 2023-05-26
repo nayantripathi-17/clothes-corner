@@ -2,7 +2,8 @@ import NextAuth, { NextAuthOptions, Session, TokenSet } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { shopifyInit } from "../../../lib/shopify/shopifyInit";
 import { initDB } from "../../../lib/firebase/intiDB";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, addDoc, setDoc } from "firebase/firestore";
+import { createCartWithoutLines } from "../../../lib/gql/mutateCartQuery";
 
 export const authOptions: NextAuthOptions = {
   // Configure one or more authentication providers
@@ -27,7 +28,7 @@ export const authOptions: NextAuthOptions = {
   ],
   secret: process.env.JWT_SECRET,
   session: {
-    maxAge: 7 * 24 * 60 * 60,
+    maxAge: 90 * 24 * 60 * 60,
   },
 
   pages: {
@@ -55,12 +56,24 @@ export const authOptions: NextAuthOptions = {
 
           const customerData = {
             customer_id: String(customer.id),
-            fname: "",
-            lname: "",
+            fName: "",
+            lName: "",
+          }
+
+          const cartRes = await createCartWithoutLines(String(credentials.phone))
+
+          const customerCartData = {
+            cartDetails: {
+              // @ts-ignore
+              cartId: cartRes?.body?.data?.cartCreate?.cart?.id
+            }
           }
 
           const customerRef = doc(db, "users", `${credentials.phone}`)
-          await updateDoc(customerRef, customerData)
+          const customerCartRef = doc(db, "cart", `${credentials.phone}`)
+
+          await setDoc(customerRef, customerData, { merge: true })
+          await setDoc(customerCartRef, customerCartData, { merge: true })
         }
 
         return true;

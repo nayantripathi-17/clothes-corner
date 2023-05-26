@@ -1,4 +1,4 @@
-import { Button, NumberInput, TextInput } from "@mantine/core"
+import { Button, NumberInput, Text, TextInput } from "@mantine/core"
 import { useEffect, useState } from "react"
 import { ConfirmationResult, RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
 import { initAuth } from "../lib/firebase/initAuth";
@@ -6,7 +6,7 @@ import { signIn } from "next-auth/react";
 
 function LoginForm() {
 
-  const [phone, setPhone] = useState<number | "">("")
+  const [phone, setPhone] = useState<string | "">("")
   const [otp, setOtp] = useState<number | "">("")
   const [showOtpBox, setShowOtpBox] = useState(false)
   const [captcha, setCaptcha] = useState<null | RecaptchaVerifier>(null)
@@ -69,18 +69,19 @@ function LoginForm() {
     <div className="px-10 py-5 text-black space-y-4">
       <p className="text-4xl text-gray-500 font-bold">Login</p>
 
-      <NumberInput
+      <TextInput
         className="items-center"
-        hideControls
         label="Phone Number"
         required
         name="phone"
+        type="tel"
+        pattern="[0-9]{10}"
         value={phone}
         icon={
           <p className="">+91</p>
         }
-        onChange={setPhone}
-        error={(phone !== "" && phone.toString().length !== 10) ? "Phone number should be 10 digits" : false}
+        onChange={(e) => setPhone(e.currentTarget.value)}
+        error={(phone !== "" && phone.length !== 10) ? "Phone number should be 10 digits" : false}
       />
       <Button id="get-otp" className="bg-blue-400 hover:bg-blue-600" onClick={() => getOtp()}>Get OTP</Button>
 
