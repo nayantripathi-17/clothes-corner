@@ -14,7 +14,7 @@ function ProductMini({ product }: ProductMiniProps) {
     const router = useRouter()
 
     return (
-        <div onClick={()=>router.push(`/product/${product.id}`)} className="cursor-pointer lg:flex lg:flex-col lg:items-center">
+        <div onClick={() => router.push(`/product/${product.id}`)} className="cursor-pointer lg:flex lg:flex-col lg:items-center">
             <Image
                 src={source}
                 width="0"
@@ -23,11 +23,15 @@ function ProductMini({ product }: ProductMiniProps) {
                 alt=""
                 className=" pb-5 transition ease-in-out hover:scale-y-95 hover:-translate-y-7 duration-300 w-full h-auto"
                 onMouseEnter={() => {
-                    setSource(Array.isArray(product.images) && product?.images[1].src)
+                    //@ts-ignore
+                    {
+                        Array.isArray(product.images) && product?.images?.[1]?.src && setSource(product?.images?.[1]?.src)
+                    }
                     setIsHovering(true)
                 }}
                 onMouseLeave={() => {
-                    setSource(Array.isArray(product.images) && product?.images[0].src)
+                    //@ts-ignore
+                    setSource(Array.isArray(product.images) && product?.images?.[0]?.src ? product?.images?.[0]?.src : "")
                     setIsHovering(false)
                 }}
             />
@@ -44,7 +48,7 @@ function ProductMini({ product }: ProductMiniProps) {
                     <p className="text-gray-500 line-through inline-block text-sm">{Array.isArray(product.variants) && (product?.variants[0]?.compare_at_price) ? `₹ ${product?.variants[0]?.compare_at_price}` : ""}</p>
                     <p className="font-bold text-black inline-block">₹ {Array.isArray(product.variants) && product?.variants[0]?.price}</p>
                     <div className="bg-red-700 px-2 inline-block">
-                        <p className="text-white font-extrabold text-left">{Array.isArray(product.variants) && (product?.variants[0]?.compare_at_price) && product?.variants[0]?.price?`-${((product?.variants[0]?.compare_at_price-product?.variants[0]?.price)/product?.variants[0]?.compare_at_price).toFixed()} %`:""}</p>
+                        <p className="text-white font-extrabold text-left">{Array.isArray(product.variants) && (product?.variants[0]?.compare_at_price) && product?.variants[0]?.price ? `-${(((product?.variants[0]?.compare_at_price - product?.variants[0]?.price) / product?.variants[0]?.compare_at_price) * 100).toFixed()} %` : ""}</p>
                     </div>
                 </div>
             </div >

@@ -9,13 +9,14 @@ import { fetchCart, removeCartLine } from "../lib/gql/mutateCartQuery";
 import { useSession } from "next-auth/react";
 import ShoppingBag from "./ShoppingBag";
 import CustomerDetailsForm from "./CustomerDetailsForm";
+import { createCart } from "../lib/shopify/createCart";
 
 
-function Cart({ userCart, userCartCreateData }: { userCart: CartObject, userCartCreateData: any }) {
+function Cart({ userCart, userCartCreateData }: { userCart: CartObject | {}, userCartCreateData: any }) {
 
     const { width, height } = useViewportSize();
     const [activeTab, setActiveTab] = useState<string | null>("cart");
-    const [cart, setCart] = useState<CartObject>(userCart);
+    const [cart, setCart] = useState<CartObject | {}>(userCart);
     const [cartCreateData, setCartCreateData] = useState<any>(userCartCreateData);
     const { data: session, status } = useSession()
 
@@ -33,9 +34,14 @@ function Cart({ userCart, userCartCreateData }: { userCart: CartObject, userCart
                 setCart({})
                 return
             }
-            console.log((cartProducts?.cartDetails.cartId))
-
             const shopifyCart = await fetchCart(String(cartProducts?.cartDetails.cartId))
+            //@ts-ignore
+            if(!shopifyCart?.body?.data?.cart){
+                setCart({})
+                //@ts-ignore
+                await createCart(String(session?.user?.phone))
+                return
+            }
 
             Object.keys(cartProducts).filter(key => key != "cartDetails").forEach((variantId) => {
                 (cartProducts[variantId]).variant = JSON.parse((cartProducts[variantId]).variant)
@@ -77,7 +83,6 @@ function Cart({ userCart, userCartCreateData }: { userCart: CartObject, userCart
             Object.keys(cartProducts).forEach((key) => {
                 if (key === variantId) lineIds.push(String(cartProducts[key]?.cartLineId))
             })
-            console.log(lineIds)
             const cartId = cartProducts?.cartDetails.cartId
 
             const cartRes = await removeCartLine(lineIds, cartId)

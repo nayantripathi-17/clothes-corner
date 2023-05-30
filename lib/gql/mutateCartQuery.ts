@@ -3,7 +3,7 @@ import { storeFrontInit } from "../shopify/storeFrontInit";
 import { returnGql } from "./returnGql";
 
 const createCartWithoutLinesQuery = gql
-`mutation($userPhone: String!){
+    `mutation($userPhone: String!){
     cartCreate(
         input: {
         lines: [],
@@ -37,13 +37,12 @@ export async function createCartWithoutLines(userPhone: string) {
         const cartRes = await storefrontClient.query({
             data: { query: returnGql(createCartWithoutLinesQuery), variables: createCartVariables },
         })
-        console.log(cartRes)
 
         return cartRes
 
     } catch (err) {
         //@ts-ignore
-        console.log(err?.response)
+        console.log(err)
     }
 }
 
@@ -101,7 +100,7 @@ mutation($cartLines: [CartLineInput!]!, $cartId: ID!){
 export async function addCartLine(cartLines: Object[], cartId: string) {
     try {
         const addCartLineVariables = { cartLines, cartId }
-    
+
 
         if (cartLines.length <= 0 || Array.isArray(cartLines) !== true || typeof (cartId) !== "string") return
 
@@ -115,7 +114,7 @@ export async function addCartLine(cartLines: Object[], cartId: string) {
 
     } catch (err) {
         //@ts-ignore
-        console.log(err?.response)
+        console.log(err)
     }
 }
 
@@ -160,7 +159,7 @@ mutation($lineIds: [ID!]!, $cartId: ID!){
 export async function removeCartLine(lineIds: string[], cartId: string) {
     try {
         const removeCartLineVariables = { lineIds, cartId }
-    
+
 
         if (lineIds.length <= 0 || Array.isArray(lineIds) !== true || typeof (cartId) !== "string") return
 
@@ -174,13 +173,13 @@ export async function removeCartLine(lineIds: string[], cartId: string) {
 
     } catch (err) {
         //@ts-ignore
-        console.log(err?.response)
+        console.log(err)
     }
 }
 
 
 const fetchCartQuery = gql
-`query($cartId:ID!){
+    `query($cartId:ID!){
     cart(id: $cartId) {
             id
             createdAt
@@ -249,7 +248,7 @@ const fetchCartQuery = gql
 `
 
 
-export async function fetchCart(cartId:string) {
+export async function fetchCart(cartId: string) {
     try {
         const fetchCartVariables = { cartId }
 
@@ -265,7 +264,7 @@ export async function fetchCart(cartId:string) {
 
     } catch (err) {
         //@ts-ignore
-        console.log(err?.response)
+        console.log(err)
     }
 }
 
@@ -322,8 +321,8 @@ mutation cartBuyerIdentityUpdate($buyerIdentity: CartBuyerIdentityInput!, $cartI
 
 export async function updateBuyerInfo(buyerIdentity: Object, cartId: string) {
     try {
-        const updateBuyerInfoVariables = { cartId,buyerIdentity }
-    
+        const updateBuyerInfoVariables = { cartId, buyerIdentity }
+
 
         if (typeof (cartId) !== "string") return
 
@@ -337,51 +336,6 @@ export async function updateBuyerInfo(buyerIdentity: Object, cartId: string) {
 
     } catch (err) {
         //@ts-ignore
-        console.log(err?.response)
+        console.log(err)
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

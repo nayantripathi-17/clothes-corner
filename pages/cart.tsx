@@ -9,6 +9,8 @@ import { getSession } from 'next-auth/react'
 import { doc, getDoc } from 'firebase/firestore'
 import { initDB } from '../lib/firebase/intiDB'
 import { fetchCart } from '../lib/gql/mutateCartQuery'
+import { createCart } from '../lib/shopify/createCart'
+import { CartObject } from '../types'
 
 export default function ProductId({ userCart, cartCreateData }: InferGetServerSidePropsType<typeof getServerSideProps>) {
 
@@ -26,7 +28,7 @@ export default function ProductId({ userCart, cartCreateData }: InferGetServerSi
             <div className="min-h-screen">
                 <Cart userCart={userCart} userCartCreateData={cartCreateData} />
             </div>
-            {/* <Footer
+            <Footer
                 logo_URL={Logo}
                 data={[
                     {
@@ -54,67 +56,87 @@ export default function ProductId({ userCart, cartCreateData }: InferGetServerSi
                             { label: "Forums", link: "/" }]
                     }
                 ]
-                } /> */}
+                } />
         </main>
     )
 }
 
 
 export async function getServerSideProps(context: GetServerSidePropsContext) {
+    try {
+        const userSession = await getSession(context);
+        const db = await initDB();
 
-
-    const userSession = await getSession(context);
-    const db = await initDB();
-
-    //@ts-ignore
-    const cartRef = doc(db, "cart", `${userSession?.user?.phone}`);
-    const userCart = await getDoc(cartRef);
-
-    if (!userCart.exists()) {
-
-        return {
-            props: {
-                userCart: {},
-                cartCreateData: {}
-            },
-        }
-    }
-
-    const data = userCart.data()
-    if (Object.keys(data).filter(key => key != "cartDetails").length === 0) {
-        return {
-            props: {
-                userCart: {}
-            },
-        }
-    }
-
-    //@ts-ignore
-    const { body: { data: { cart: cartRes } } } = await fetchCart(String(data.cartDetails.cartId))
-
-    const { lines: { edges: cartItems } } = cartRes;
-
-
-    Object.keys(data).filter(key => key != "cartDetails").forEach((variantId) => {
-        (data[variantId]).variant = JSON.parse((data[variantId]).variant)
-    })
-    //@ts-ignore
-    cartItems.map((item) => {
-        data[String(item?.node?.merchandise?.id).slice("gid://shopify/ProductVariant/".length)].actualPriceTotal = Number(item?.node?.cost?.totalAmount?.amount)
-        data[String(item?.node?.merchandise?.id).slice("gid://shopify/ProductVariant/".length)].actualPricePerUnit = (Number(item?.node?.cost?.totalAmount?.amount) / Number(item?.node?.quantity)).toFixed(2)
-    })
-
-    const sortedCartProducts = Object.keys(data).filter(key => key != "cartDetails").sort().reduce((acc, key) => {
         //@ts-ignore
-        acc[key] = data[key]
-        return acc;
-    }, {})
+        const cartRef = doc(db, "cart", `${userSession?.user?.phone}`);
+        const userCart = await getDoc(cartRef);
 
-    return {
-        props: {
-            session: userSession,
-            userCart: sortedCartProducts,
-            cartCreateData: cartRes
-        },
-    };
+        if (!userCart.exists()) {
+
+            return {
+                props: {
+                    session: userSession,
+                    userCart: {},
+                    cartCreateData: {}
+                },
+            }
+        }
+
+        const data = userCart.data()
+        if (Object.keys(data).filter(key => key != "cartDetails").length === 0) {
+            return {
+                props: {
+                    session: userSession,
+                    cartCreateData: {},
+                    userCart: Object({}),
+                },
+            }
+        }
+
+        //@ts-ignore
+        const { body: { data: { cart: cartRes } } } = await fetchCart(String(data.cartDetails.cartId))
+        //@ts-ignore
+        if (!cartRes) {
+            //@ts-ignore
+            await createCart(String(userSession?.user?.phone))
+            return {
+                props: {
+                    session: userSession,
+                    cartCreateData: {},
+                    userCart: Object({}),
+                }
+            }
+        }
+
+        const { lines: { edges: cartItems } } = cartRes;
+
+
+        Object.keys(data).filter(key => key != "cartDetails").forEach((variantId) => {
+            (data[variantId]).variant = JSON.parse((data[variantId]).variant)
+        })
+        //@ts-ignore
+        cartItems.map((item) => {
+            data[String(item?.node?.merchandise?.id).slice("gid://shopify/ProductVariant/".length)].actualPriceTotal = Number(item?.node?.cost?.totalAmount?.amount)
+            data[String(item?.node?.merchandise?.id).slice("gid://shopify/ProductVariant/".length)].actualPricePerUnit = (Number(item?.node?.cost?.totalAmount?.amount) / Number(item?.node?.quantity)).toFixed(2)
+        })
+
+        const sortedCartProducts = Object.keys(data).filter(key => key != "cartDetails").sort().reduce((acc, key) => {
+            //@ts-ignore
+            acc[key] = data[key]
+            return acc;
+        }, {})
+
+        return {
+            props: {
+                session: userSession,
+                userCart: sortedCartProducts as CartObject,
+                cartCreateData: cartRes
+            },
+        };
+    } catch (err) {
+        console.log(err)
+        return {
+            notFound: true,
+        }
+    }
 }

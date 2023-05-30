@@ -9,12 +9,12 @@ import Offer from "../public/offergif-1.gif"
 
 import Banner from '../components/Banner'
 import Slide from '../components/Slide'
-import Categories from '../components/Categories'
+// import Categories from '../components/Categories'
 import ProductCarousel from '../components/ProductCarousel'
 import Socials from '../components/Socials'
 import Features from '../components/Features'
 import Footer from '../components/Footer'
-import { GetServerSidePropsContext, InferGetServerSidePropsType } from 'next'
+import {  InferGetServerSidePropsType } from 'next'
 import { shopifyInit } from '../lib/shopify/shopifyInit'
 import { useRef } from 'react'
 
@@ -32,19 +32,15 @@ export default function Home({ products }: InferGetServerSidePropsType<typeof ge
         pages={["Men", "Women", "Accessories", "New In", "Disney", "Marvel", "Contact"]}
         logo_URL={Logo}
       />
-      <Banner imgsrc={AllCollections} alt="" width={100} link="/" />
+      <Banner imgsrc={AllCollections} alt="" width={100} link="#newIn"/>
       <div className="flex py-10">
         <Banner imgsrc={Women} alt="" width={50} link="/" />
         <Banner imgsrc={Men} alt="" width={50} link="/" />
       </div>
-      <div><Slide /></div>
-      <div className="py-10">
+      {/* <div className="py-10">
         <Banner imgsrc={Offer} alt="Offer" width={100} link="/" />
-      </div>
-      <div className="text-center">
-        <Categories title="Categories" />
-      </div>
-      <div className="text-center py-10">
+      </div> */}
+      <div className="text-center py-10" id="newIn">
         <ProductCarousel title="New In" products={JSON.parse(products)} />
       </div>
       <div className="text-center py-10">

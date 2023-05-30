@@ -16,10 +16,11 @@ import { initDB } from "../lib/firebase/intiDB";
 import { deleteField, doc, getDoc, setDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { fetchCart, removeCartLine } from "../lib/gql/mutateCartQuery";
+import { createCart } from "../lib/shopify/createCart";
 
 function Navbar({ pages, logo_URL, getRef }: NavbarProps) {
 
-  const { height, width } = useViewportSize()
+  const { width } = useViewportSize()
 
   const [openedBurger, { toggle }] = useDisclosure(false);
   const [openedDrawer, { open: openDrawer, close: closeDrawer }] = useDisclosure(false);
@@ -46,6 +47,13 @@ function Navbar({ pages, logo_URL, getRef }: NavbarProps) {
       }
 
       const shopifyCart = await fetchCart(String(cartProducts?.cartDetails.cartId))
+      //@ts-ignore
+      if (!shopifyCart?.body?.data?.cart) {
+        setCart({})
+        //@ts-ignore
+        await createCart(String(session?.user?.phone))
+        return
+      }
       //@ts-ignore
       setSubTotal(shopifyCart?.body?.data?.cart?.cost?.subtotalAmount?.amount)
 
@@ -87,10 +95,10 @@ function Navbar({ pages, logo_URL, getRef }: NavbarProps) {
       Object.keys(cartProducts).forEach((key) => {
         if (key === variantId) lineIds.push(String(cartProducts[key]?.cartLineId))
       })
-      console.log(lineIds)
       const cartId = cartProducts?.cartDetails.cartId
 
       const cartRes = await removeCartLine(lineIds, cartId)
+      // if(cartRes?.body?.data?.cartLinesre)
       const newDoc = { [variantId]: deleteField() }
 
       await setDoc(variantRef, newDoc, { merge: true });

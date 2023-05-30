@@ -4,6 +4,7 @@ import { shopifyInit } from "../../../lib/shopify/shopifyInit";
 import { initDB } from "../../../lib/firebase/intiDB";
 import { doc, getDoc, addDoc, setDoc } from "firebase/firestore";
 import { createCartWithoutLines } from "../../../lib/gql/mutateCartQuery";
+import { createCart } from "../../../lib/shopify/createCart";
 
 export const authOptions: NextAuthOptions = {
   // Configure one or more authentication providers
@@ -60,20 +61,9 @@ export const authOptions: NextAuthOptions = {
             lName: "",
           }
 
-          const cartRes = await createCartWithoutLines(String(credentials.phone))
-
-          const customerCartData = {
-            cartDetails: {
-              // @ts-ignore
-              cartId: cartRes?.body?.data?.cartCreate?.cart?.id
-            }
-          }
-
           const customerRef = doc(db, "users", `${credentials.phone}`)
-          const customerCartRef = doc(db, "cart", `${credentials.phone}`)
-
           await setDoc(customerRef, customerData, { merge: true })
-          await setDoc(customerCartRef, customerCartData, { merge: true })
+          createCart(String(credentials.phone))
         }
 
         return true;

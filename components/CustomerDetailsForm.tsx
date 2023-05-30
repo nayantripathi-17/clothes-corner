@@ -6,6 +6,7 @@ import { initDB } from '../lib/firebase/intiDB'
 import { doc, getDoc, setDoc } from 'firebase/firestore'
 import { useRouter } from 'next/router'
 import { CustomerDetails } from '../types'
+import { createCart } from '../lib/shopify/createCart'
 
 function CustomerDetailsForm({ phone }: { phone: string }) {
     const [checked, setChecked] = useState(false)
@@ -95,7 +96,6 @@ function CustomerDetailsForm({ phone }: { phone: string }) {
                     phone: `+91${addPhoneNumber}`,
                 }
             }],
-            email,
             phone: phone
         }
 
@@ -106,6 +106,12 @@ function CustomerDetailsForm({ phone }: { phone: string }) {
         const cartId = dbCartRes.cartDetails.cartId
 
         const resBuyerInfo = await updateBuyerInfo(customer, cartId)
+        //@ts-ignore
+        if (resBuyerInfo?.body?.data?.cartBuyerIdentityUpdate?.userErrors?.[0]?.message === "The specified cart does not exist.") {
+            //@ts-ignore
+            await createCart(String(phone))
+            return
+        }
 
         if (save) {
             await setDoc(userRef,

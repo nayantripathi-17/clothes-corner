@@ -47,7 +47,7 @@ export default function FooterLinks({ logo_URL, data }: FooterLinksProps) {
                         </ActionIcon>
                     </Group>
                 </div>
-                <div className="flex space-x-24">
+                <div className="flex space-x-12 md:space-x-20">
                     {data?.map((group, index) => {
                         return (
                             <div key={index} className="space-y-1">

@@ -8,7 +8,11 @@ export default function App({ Component, pageProps: { session, ...pageProps } }:
   return (
     <RecoilRoot>
       <SessionProvider session={session}>
-        <MantineProvider theme={{ colorScheme: "light" }} withGlobalStyles withNormalizeCSS>
+        <MantineProvider theme={{
+          colorScheme: "light"
+        }}
+          withGlobalStyles
+          withNormalizeCSS>
           <Component {...pageProps} />
         </MantineProvider>
       </SessionProvider>

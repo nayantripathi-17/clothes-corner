@@ -7,7 +7,7 @@ function Banner({ imgsrc, link, alt, width }: BannerProps) {
 
     return (
         <Image
-            className={`cursor-pointer`}
+            className={`cursor-pointer`}    
             style={{ width: `${width}%` }}
             src={imgsrc}
             alt={alt}

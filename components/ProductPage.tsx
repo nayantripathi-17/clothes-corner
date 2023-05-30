@@ -10,8 +10,9 @@ import { deleteField, doc, getDoc, setDoc } from "firebase/firestore"
 import { useSession } from "next-auth/react"
 import FavoriteBorderOutlinedIcon from '@mui/icons-material/FavoriteBorderOutlined';
 import FavoriteOutlinedIcon from '@mui/icons-material/FavoriteOutlined';
-import { Button } from "@mantine/core"
 import { addCartLine } from "../lib/gql/mutateCartQuery"
+import { createCart } from "../lib/shopify/createCart"
+import { useRouter } from "next/router"
 
 
 {/*@ts-ignore*/ }
@@ -19,6 +20,7 @@ function ProductPage({ product, getRef }: { product: Product, ref: MutableRefObj
 
     const { width, height } = useViewportSize();
     const { data: session, status } = useSession();
+    const router = useRouter();
 
 
 
@@ -121,6 +123,13 @@ function ProductPage({ product, getRef }: { product: Product, ref: MutableRefObj
             const { cartDetails: { cartId } } = (await getDoc(cartRef)).data();
 
             const cartRes = await addCartLine([{ quantity, merchandiseId: String(selectedVariant?.admin_graphql_api_id) }], String(cartId));
+            //@ts-ignore
+            if (cartRes?.body?.data?.cartLinesAdd?.userErrors?.[0]?.message === "The specified cart does not exist.") {
+                //@ts-ignore
+                await createCart(String(session?.user?.phone))
+                await addToCart()
+                return
+            }
 
             const productObj = {
                 //@ts-ignore
@@ -172,6 +181,41 @@ function ProductPage({ product, getRef }: { product: Product, ref: MutableRefObj
         catch (err) { }
     }
 
+    const buyNow = async () => {
+        try {
+            if (!session) {
+                getRef.current.click()
+                return;
+            }
+            //@ts-ignore
+            await createCart(String(session?.user?.phone))
+            const db = await initDB();
+            {/*@ts-ignore*/ }
+            const cartRef = doc(db, "cart", `${session?.user?.phone}`)
+            //@ts-ignore
+            const { cartDetails: { cartId } } = (await getDoc(cartRef)).data();
+
+            const cartRes = await addCartLine([{ quantity, merchandiseId: String(selectedVariant?.admin_graphql_api_id) }], String(cartId));
+
+            const productObj = {
+                //@ts-ignore
+                image: String(product?.images?.[0]?.src),
+                productName: String(product.title),
+                variant: JSON.stringify(selectedVariant),
+                quantity: quantity,
+                //@ts-ignore
+                cartLineId: cartRes?.body?.data?.cartLinesAdd?.cart?.lines?.edges?.[0]?.node?.id
+            }
+
+            await setDoc(cartRef, {
+                [String(selectedVariant?.id)]: productObj
+            }, { merge: true })
+
+            router.push("/cart")
+            return
+        }
+        catch (err) { }
+    }
 
 
     return (
@@ -251,8 +295,10 @@ function ProductPage({ product, getRef }: { product: Product, ref: MutableRefObj
                         <p className="hover:scale-110 cursor-pointer" onClick={() => addOrRemoveWishlist()}><FavoriteOutlinedIcon className="text-red-500" fontSize="large" /></p>
                     }
                 </div>
-                <p className="capitalize text-lg pt-2">₹ {selectedVariant?.price}</p>
-                <p className="text-lg pt-2">{(selectedVariant?.admin_graphql_api_id)}</p>
+                <div className="flex space-x-2">
+                    <p className="capitalize text-lg pt-2 text-red-600 line-through">₹ {selectedVariant?.compare_at_price}</p>
+                    <p className="capitalize text-lg pt-2">₹ {selectedVariant?.price}</p>
+                </div>
                 <hr className="h-px bg-gray-300 border-0 my-4" />
                 {/*@ts-ignore*/}
                 {product.options?.map((option, indexOption: number) => {
@@ -278,7 +324,7 @@ function ProductPage({ product, getRef }: { product: Product, ref: MutableRefObj
                     <button disabled={selectedVariant?.inventory_quantity === 0 ? true : false} className="w-full md:w-1/2 py-2 mt-4 border-black rounded-none border-2 font-semibold tracking-wider hover:bg-gray-100 cursor-pointer" onClick={addToCart}>Add To Cart</button>
                 </div>
                 <div>
-                    <button disabled={selectedVariant?.inventory_quantity === 0 ? true : false} className="w-full md:w-1/2 py-2 mt-4 border-black rounded-none border-2 bg-black text-white font-semibold tracking-wider hover:bg-gray-900 cursor-pointer" onClick={addToCart}>Buy Now</button>
+                    <button disabled={selectedVariant?.inventory_quantity === 0 ? true : false} className="w-full md:w-1/2 py-2 mt-4 border-black rounded-none border-2 bg-black text-white font-semibold tracking-wider hover:bg-gray-900 cursor-pointer" onClick={buyNow}>Buy Now</button>
                 </div>
             </div>
         </div>

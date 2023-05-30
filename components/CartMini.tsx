@@ -1,6 +1,3 @@
-import { Button } from '@mantine/core';
-import Image from 'next/image';
-import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 import { useRouter } from 'next/router';
 import CartProduct from './CartProduct';
 
