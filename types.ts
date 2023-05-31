@@ -1,18 +1,29 @@
-import { ModalProps } from "@mantine/core"
 import { Product } from "@shopify/shopify-api/rest/admin/2023-04/product"
 import { ConfirmationResult } from "firebase/auth"
 import { RequestInternal } from "next-auth"
 import { StaticImageData } from "next/image"
-import { MutableRefObject, RefObject } from "react"
+import { MutableRefObject } from "react"
+
 
 export declare interface NavbarProps {
-    pages: string[],
-    logo_URL: string,
+    pages: {
+        title: string,
+        link: string
+    }[],
+    logo_URL: string | StaticImageData,
     getRef: MutableRefObject<HTMLButtonElement>
 }
 
+export declare interface FooterLinksProps {
+    logo_URL: string | StaticImageData,
+    data: {
+        title: string;
+        links: { label: string; link: string }[];
+    }[];
+}
+
 export declare interface BannerProps {
-    imgsrc: StaticImageData,
+    imgsrc: string | StaticImageData,
     link: string,
     alt: string,
     width: number
@@ -95,14 +106,14 @@ export declare interface CustomerDetails {
     lName: string,
     email: string,
     phone: string,
-    shippingAddress:{
+    shippingAddress: {
         streetAddressLine1: string;
         streetAddressLine2: string;
         city: string;
         state: string;
         zip: string;
     },
-    billingAddress:{
+    billingAddress: {
         streetAddressLine1: string;
         streetAddressLine2: string;
         city: string;

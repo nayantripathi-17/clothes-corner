@@ -2,12 +2,15 @@ import { Order } from '@shopify/shopify-api/rest/admin/2023-04/order'
 import React from 'react'
 import LineItems from './LineItems'
 import { Card } from '@mantine/core'
+import { useRouter } from 'next/router'
+import Link from 'next/link'
 
 function OrderComponent({ orders }: { orders: Order[] }) {
+    const router = useRouter()
 
     return (
         <div className="text-black min-h-screen">
-            {orders.length !== 0 && orders.map((order) => {
+            {orders.length !== 0 ? orders.map((order) => {
                 return (
                     <React.Fragment key={order.id}>
                         <div className="block lg:flex lg:flex-grow">
@@ -56,7 +59,17 @@ function OrderComponent({ orders }: { orders: Order[] }) {
                         </div>
                     </React.Fragment>
                 )
-            })}
+            })
+                :
+                <div className="flex items-center flex-grow min-h-screen">
+                    <div className=" mx-auto my-auto space-y-10">
+                        <p className="text-xl font-semibold">
+                            You have not ordered Anything.
+                        </p>
+                        <button className="w-full border-black rounded-none border-2 font-semibold tracking-wider hover:bg-gray-100 cursor-pointer bg-white py-2 uppercase"><Link href="/">Continue Shopping</Link></button>
+                    </div>
+                </div>
+            }
         </div>
     )
 }

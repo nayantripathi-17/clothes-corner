@@ -1,6 +1,6 @@
 import { Burger, Drawer, Header, Menu, Modal, Title } from "@mantine/core"
 import Image from "next/image"
-import SearchIcon from '@mui/icons-material/SearchOutlined';
+// import SearchIcon from '@mui/icons-material/SearchOutlined';
 import LocalMallIcon from '@mui/icons-material/LocalMallOutlined';
 import PersonOutlineOutlinedIcon from '@mui/icons-material/PersonOutlineOutlined';
 import FavoriteBorderOutlinedIcon from '@mui/icons-material/FavoriteBorderOutlined';
@@ -17,6 +17,7 @@ import { deleteField, doc, getDoc, setDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { fetchCart, removeCartLine } from "../lib/gql/mutateCartQuery";
 import { createCart } from "../lib/shopify/createCart";
+import Link from "next/link";
 
 function Navbar({ pages, logo_URL, getRef }: NavbarProps) {
 
@@ -97,8 +98,7 @@ function Navbar({ pages, logo_URL, getRef }: NavbarProps) {
       })
       const cartId = cartProducts?.cartDetails.cartId
 
-      const cartRes = await removeCartLine(lineIds, cartId)
-      // if(cartRes?.body?.data?.cartLinesre)
+      await removeCartLine(lineIds, cartId)
       const newDoc = { [variantId]: deleteField() }
 
       await setDoc(variantRef, newDoc, { merge: true });
@@ -112,11 +112,14 @@ function Navbar({ pages, logo_URL, getRef }: NavbarProps) {
   }, [status])
 
   return (
-    <Header height={80} className="flex grow justify-between py-5 px-8">
+    <Header height={100} className="flex grow justify-between py-5 px-8 items-center">
       {width > 1100 ?
         <div className="text-black space-x-4 uppercase">
           {pages.map((page) => {
-            return <Title key={page} className="inline-block hover:underline align-middle text-sm">{page}</Title>
+            return (
+              <Title key={page.title} className="inline-block hover:underline align-middle text-sm">
+                <Link href={page.link} target="_blank">{page.title}</Link>
+              </Title>)
           })
           }
         </div>
@@ -137,7 +140,7 @@ function Navbar({ pages, logo_URL, getRef }: NavbarProps) {
           >
             <div className="space-y-10 text-2xl pl-4 uppercase font-semibold">
               {pages.map((page) => {
-                return <p key={page} className="hover:text-gray-500">{page}</p>
+                return <Link key={page.title} href={page.link} className="hover:text-gray-500" target="_blank"><p>{page.title}</p></Link>
               })
               }
             </div>
@@ -145,16 +148,17 @@ function Navbar({ pages, logo_URL, getRef }: NavbarProps) {
         </>
       }
 
-      <div className={`${width > 1380 ? "absolute right-[45%]" : ""}`}>
+      <div className={`${width > 1024 ? "absolute right-[45%]" : ""}`}>
         {<Image
           src={logo_URL}
+          height={80}
           alt="Logo"
+          sizes="100vw"
           className="cursor-pointer"
           onClick={() => router.push("/")}
         />}
       </div>
       <div className="space-x-4 min-w-fit">
-        <SearchIcon className="text-black" />
         <FavoriteBorderOutlinedIcon className="text-black cursor-pointer hover:scale-110" />
         <LocalMallIcon className="text-black cursor-pointer hover:scale-110"
           onClick={router.pathname !== "/cart" ? async () => { getCart(); openCartDrawer() } : () => { router.reload() }}
@@ -185,10 +189,28 @@ function Navbar({ pages, logo_URL, getRef }: NavbarProps) {
           <PersonOutlineOutlinedIcon />
         </button>
         {session ?
-          <Modal opened={opened} onClose={close} withCloseButton={false} centered>
+          <Modal
+            classNames={{
+              body: "p-0 m-0",
+            }}
+            opened={opened}
+            onClose={close}
+            withCloseButton={false}
+            size="sm"
+            centered
+          >
             <LogoutForm />
           </Modal> :
-          <Modal opened={opened} onClose={close} withCloseButton={false} centered>
+          <Modal
+            classNames={{
+              body: "p-0 m-0",
+            }}
+            opened={opened}
+            onClose={close}
+            withCloseButton={false}
+            size="sm"
+            centered
+          >
             <LoginForm />
           </Modal>
         }

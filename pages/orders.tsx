@@ -1,7 +1,6 @@
 import Navbar from '../components/Navbar'
-import { Inter } from 'next/font/google'
 
-import Logo from "../public/bonkers_corner_logo-new_vertical.svg"
+import Logo from "../public/THE_13_LOGO_430x.webp"
 import Footer from '../components/Footer'
 import { GetServerSidePropsContext, InferGetServerSidePropsType } from 'next'
 import { shopifyInit } from '../lib/shopify/shopifyInit'
@@ -12,18 +11,23 @@ import { doc, getDoc } from 'firebase/firestore'
 import { getSession } from 'next-auth/react'
 import { Order } from '@shopify/shopify-api/rest/admin/2023-04/order'
 
-const inter = Inter({ subsets: ['latin'] })
 
 export default function Orders({ orders }: InferGetServerSidePropsType<typeof getServerSideProps>) {
 
     const ref = useRef<HTMLButtonElement>(null)
+    const pages = [
+        { title: "Men", link: "/" },
+        { title: "Women", link: "/" },
+        { title: "Orders", link: "/orders" },
+        { title: "Contact", link: "/" },
+    ]
 
     return (
         <main className="min-h-screen bg-white">
             <Navbar
                 //@ts-ignore
                 getRef={ref}
-                pages={["Men", "Women", "Accessories", "New In", "Disney", "Marvel", "Contact"]}
+                pages={pages}
                 logo_URL={Logo}
             />
             {/* @ts-ignore */}
@@ -114,8 +118,6 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
 
         return { ...order, line_items: line_itemsNew }
     }))
-
-    console.log(ordersNew)
 
 
     return {

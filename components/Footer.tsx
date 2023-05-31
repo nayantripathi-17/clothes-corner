@@ -1,22 +1,9 @@
-import { createStyles, Text, Container, ActionIcon, Group, rem } from '@mantine/core';
-// import { IconBrandTwitter, IconBrandYoutube, IconBrandInstagram } from '@tabler/icons-react';
-// import { MantineLogo } from '@mantine/ds';
-import InstagramIcon from '@mui/icons-material/Instagram';
-import FacebookOutlinedIcon from '@mui/icons-material/FacebookOutlined';
-import TwitterIcon from '@mui/icons-material/Twitter';
-import PinterestIcon from '@mui/icons-material/Pinterest';
+import { Text, Group } from '@mantine/core';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
-
-
-
-interface FooterLinksProps {
-    logo_URL: string,
-    data: {
-        title: string;
-        links: { label: string; link: string }[];
-    }[];
-}
+import { FooterLinksProps } from '../types';
+import Socials from './Socials';
+import Link from 'next/link';
 
 
 export default function FooterLinks({ logo_URL, data }: FooterLinksProps) {
@@ -28,32 +15,26 @@ export default function FooterLinks({ logo_URL, data }: FooterLinksProps) {
             <div className="flex flex-col items-center md:flex-row md:justify-between md:flex-grow md:space-y-0 space-y-5">
                 <div className="flex flex-col items-center">
                     <Image
-                        className="invert my-5"
                         src={logo_URL}
+                        height={150}
                         alt="Logo"
+                        sizes="100vw"
+                        className="cursor-pointer invert my-5"
                     />
                     <Group spacing={0} position="left" noWrap>
-                        <ActionIcon size="lg">
-                            <InstagramIcon />
-                        </ActionIcon>
-                        <ActionIcon size="lg">
-                            <FacebookOutlinedIcon />
-                        </ActionIcon>
-                        <ActionIcon size="lg">
-                            <TwitterIcon />
-                        </ActionIcon>
-                        <ActionIcon size="lg">
-                            <PinterestIcon />
-                        </ActionIcon>
+                        <Socials color={"gray"} />
                     </Group>
                 </div>
                 <div className="flex space-x-12 md:space-x-20">
                     {data?.map((group, index) => {
                         return (
-                            <div key={index} className="space-y-1">
+                            <div key={index}>
                                 <p className="text-white font-bold text-xl mb-3">{group.title}</p>
-                                {group?.links?.map((link,index) => {
-                                    return (<p key={index} className="text-gray-400 text-sm cursor-pointer" onClick={() => { Router.push(link.link) }}>{link.label}</p>)
+                                {group?.links?.map((link, index) => {
+                                    return (
+                                        <Link key={index} href={link.link} target="_blank">
+                                            <p className="text-gray-400 py-1 text-sm cursor-pointer">{link.label}</p>
+                                        </Link>)
                                 })}
                             </div>
                         )
@@ -64,10 +45,10 @@ export default function FooterLinks({ logo_URL, data }: FooterLinksProps) {
             <div
             >
                 <Text color="dimmed" size="sm">
-                    © 2022. All rights reserved.
+                    © 2023, Thethirteen
                 </Text>
 
             </div>
-        </footer>
+        </footer >
     );
 }

@@ -1,5 +1,6 @@
 import { useRouter } from 'next/router';
 import CartProduct from './CartProduct';
+import Link from 'next/link';
 
 //@ts-ignore
 function CartMini({ cart, removeFromCart, subTotal }) {
@@ -36,7 +37,7 @@ function CartMini({ cart, removeFromCart, subTotal }) {
               <p className="text-gray-600 uppercase">Subtotal</p>
               <p className="text-gray-700 font-bold">₹ {Number(subTotal).toFixed(2)}</p>
             </div>
-            <button className="w-full bg-black text-white py-2 font-semibold tracking-wider" onClick={()=>router.push("/cart")}>Proceed to Checkout</button>
+            <button className="w-full bg-black text-white py-2 font-semibold tracking-wider"><Link href="/cart">Proceed to Checkout</Link></button>
           </div>
         </>
         :
@@ -44,10 +45,10 @@ function CartMini({ cart, removeFromCart, subTotal }) {
           <div className="h-[100vh] min-h-fit">
             <p className="w-fit mx-auto font-semibold text-xl">Your Cart is Empty!</p>
           </div>
-            <div className="overflow-hidden scrollbar-hide bottom-0 sticky">
+          <div className="overflow-hidden scrollbar-hide bottom-0 sticky">
 
-              <button className="w-full bg-black text-white py-2 font-semibold tracking-wider" onClick={() => router.push("/")}>Continue Shopping</button>
-            </div>
+            <button className="w-full bg-black text-white py-2 font-semibold tracking-wider"><Link href="/">Continue Shopping</Link></button>
+          </div>
         </>
       }
     </>

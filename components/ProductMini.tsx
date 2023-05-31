@@ -1,9 +1,8 @@
 import Image, { StaticImageData } from "next/image"
-import Show1 from "../public/Bonkerscorner_show_no_mercy_121-1200x1800.webp"
-import Show2 from "../public/Bonkerscorner_show_no_mercy_118-768x1152.webp"
 import { useState } from "react"
 import { ProductMiniProps } from "../types"
 import { useRouter } from "next/router"
+import Link from "next/link"
 
 
 function ProductMini({ product }: ProductMiniProps) {
@@ -14,7 +13,7 @@ function ProductMini({ product }: ProductMiniProps) {
     const router = useRouter()
 
     return (
-        <div onClick={() => router.push(`/product/${product.id}`)} className="cursor-pointer lg:flex lg:flex-col lg:items-center">
+        <Link href={`/product/${product.id}`} target="_blank" className="cursor-pointer lg:flex lg:flex-col lg:items-center">
             <Image
                 src={source}
                 width="0"
@@ -44,15 +43,15 @@ function ProductMini({ product }: ProductMiniProps) {
                 <div className="text-left text-black">
                     <p className="font-bold">{product.title}</p>
                 </div>
-                <div className="text-left text-black space-x-4 tracking-tight">
-                    <p className="text-gray-500 line-through inline-block text-sm">{Array.isArray(product.variants) && (product?.variants[0]?.compare_at_price) ? `₹ ${product?.variants[0]?.compare_at_price}` : ""}</p>
-                    <p className="font-bold text-black inline-block">₹ {Array.isArray(product.variants) && product?.variants[0]?.price}</p>
-                    <div className="bg-red-700 px-2 inline-block">
-                        <p className="text-white font-extrabold text-left">{Array.isArray(product.variants) && (product?.variants[0]?.compare_at_price) && product?.variants[0]?.price ? `-${(((product?.variants[0]?.compare_at_price - product?.variants[0]?.price) / product?.variants[0]?.compare_at_price) * 100).toFixed()} %` : ""}</p>
+                <div className="text-left text-black flex flex-col space-y-1 tracking-tight md:flex-row md:items-center md:space-x-4 md:space-y-0">
+                    <p className="text-gray-500 line-through text-sm">{Array.isArray(product.variants) && (product?.variants[0]?.compare_at_price) ? `₹ ${product?.variants[0]?.compare_at_price}` : ""}</p>
+                    <p className="font-bold text-black">₹ {Array.isArray(product.variants) && product?.variants[0]?.price}</p>
+                    <div className="bg-red-700 px-2 w-fit">
+                        <p className="text-white font-extrabold">{Array.isArray(product.variants) && (product?.variants[0]?.compare_at_price) && product?.variants[0]?.price ? `-${(((product?.variants[0]?.compare_at_price - product?.variants[0]?.price) / product?.variants[0]?.compare_at_price) * 100).toFixed()} %` : ""}</p>
                     </div>
                 </div>
             </div >
-        </div>
+        </Link>
     )
 }
 

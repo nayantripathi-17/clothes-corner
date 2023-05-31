@@ -1,4 +1,4 @@
-import { Button, NumberInput, Text, TextInput } from "@mantine/core"
+import { Button, Card, NumberInput, Text, TextInput } from "@mantine/core"
 import { useEffect, useState } from "react"
 import { ConfirmationResult, RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
 import { initAuth } from "../lib/firebase/initAuth";
@@ -15,7 +15,7 @@ function LoginForm() {
 
   const getOtp = async () => {
     try {
-      if (captcha === null || phone === "" || phone.toString().length != 10) return;
+      if (captcha === null || phone === "" || phone.toString().length != 10 || Number.isNaN(Number(phone))) return;
 
       const phoneNo = `+91${phone}`
       const auth = await initAuth();
@@ -31,7 +31,7 @@ function LoginForm() {
 
   const verifyOtp = async () => {
     try {
-      if (otp === "" || otp.toString().length !== 6 || confirmationResult === null) return;
+      if (otp === "" || otp.toString().length !== 6 || Number.isNaN(Number(otp)) || confirmationResult === null) return;
 
       setIsIncorrectOtp(false)
       const res = await confirmationResult.confirm(otp.toString())
@@ -66,41 +66,45 @@ function LoginForm() {
 
 
   return (
-    <div className="px-10 py-5 text-black space-y-4">
-      <p className="text-4xl text-gray-500 font-bold">Login</p>
-
+    <Card padding="xl" withBorder shadow="xl" className="text-black space-y-4 text-center min-h-[65vh]">
+      <Card.Section></Card.Section>
+      <p className="text-2xl text-gray-600 font-bold tracking-wide">Welcome to TheThirteen</p>
+      <p className="text-xl text-gray-600">Shop and get 50% off</p>
       <TextInput
         className="items-center"
-        label="Phone Number"
         required
         name="phone"
         type="tel"
+        placeholder="Enter Phone Number"
         pattern="[0-9]{10}"
         value={phone}
         icon={
-          <p className="">+91</p>
+          <p className="text-gray-500 px-2">+91</p>
         }
         onChange={(e) => setPhone(e.currentTarget.value)}
-        error={(phone !== "" && phone.length !== 10) ? "Phone number should be 10 digits" : false}
+        error={(phone === "" || phone.length !== 10 || Number.isNaN(Number(phone))) ? "Phone number should be 10 digits" : false}
       />
-      <Button id="get-otp" className="bg-blue-400 hover:bg-blue-600" onClick={() => getOtp()}>Get OTP</Button>
+      <Button id="get-otp" className="w-full text-black uppercase py-2 border-black rounded-none border-2 font-semibold tracking-wider hover:bg-gray-100 cursor-pointer" onClick={() => getOtp()}>Get OTP</Button>
 
       {showOtpBox &&
         <>
           <NumberInput
-            label="Otp"
             hideControls
+            placeholder="Enter OTP"
+            classNames={{
+              wrapper:"py-4"
+            }}
             required
             name="otp"
             value={otp}
             onChange={setOtp}
-            error={(otp !== "" && otp.toString().length !== 6) ? "Enter 6 digit OTP" : (isIncorrectOtp ? "Incorrect OTP" : false)}
+            error={(otp === "" || otp.toString().length !== 6 || Number.isNaN(Number(otp))) ? "Enter 6 digit OTP" : (isIncorrectOtp ? "Incorrect OTP" : false)}
           />
-          <Button className="bg-blue-400 hover:bg-blue-600" onClick={() => verifyOtp()}>Submit OTP</Button>
+          <Button className="w-full text-black uppercase py-2 border-black rounded-none border-2 font-semibold tracking-wider hover:bg-gray-100 cursor-pointer" onClick={() => verifyOtp()}>Submit OTP</Button>
         </>
       }
 
-    </div>
+    </Card>
   )
 }
 

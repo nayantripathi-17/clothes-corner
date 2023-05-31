@@ -1,5 +1,5 @@
 import Navbar from '../components/Navbar'
-import Logo from "../public/bonkers_corner_logo-new_vertical.svg"
+import Logo from "../public/THE_13_LOGO_430x.webp"
 import Footer from '../components/Footer'
 import { GetServerSidePropsContext, InferGetServerSidePropsType } from 'next'
 import { useRef } from 'react'
@@ -15,6 +15,12 @@ import { CartObject } from '../types'
 export default function ProductId({ userCart, cartCreateData }: InferGetServerSidePropsType<typeof getServerSideProps>) {
 
     const ref = useRef<HTMLButtonElement>(null)
+    const pages = [
+        { title: "Men", link: "/" },
+        { title: "Women", link: "/" },
+        { title: "Orders", link: "/orders" },
+        { title: "Contact", link: "/" },
+    ]
 
     return (
 
@@ -22,7 +28,7 @@ export default function ProductId({ userCart, cartCreateData }: InferGetServerSi
             <Navbar
                 //@ts-ignore
                 getRef={ref}
-                pages={["Men", "Women", "Accessories", "New In", "Disney", "Marvel", "Contact"]}
+                pages={pages}
                 logo_URL={Logo}
             />
             <div className="min-h-screen">

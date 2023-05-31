@@ -1,16 +1,23 @@
 import Navbar from '../../components/Navbar'
 
-import Logo from "../../public/bonkers_corner_logo-new_vertical.svg"
+import Logo from "../../public/THE_13_LOGO_430x.webp"
 import Footer from '../../components/Footer'
 import { GetServerSidePropsContext, InferGetServerSidePropsType } from 'next'
 import { shopifyInit } from '../../lib/shopify/shopifyInit'
 import ProductPage from '../../components/ProductPage'
-import { RefObject, useRef } from 'react'
+import { useRef } from 'react'
+import { getSession } from 'next-auth/react'
 
 
 export default function ProductId({ product }: InferGetServerSidePropsType<typeof getServerSideProps>) {
 
     const ref = useRef<HTMLButtonElement>(null)
+    const pages = [
+        { title: "Men", link: "/" },
+        { title: "Women", link: "/" },
+        { title: "Orders", link: "/orders" },
+        { title: "Contact", link: "/" },
+    ]
 
     return (
 
@@ -18,7 +25,7 @@ export default function ProductId({ product }: InferGetServerSidePropsType<typeo
             <Navbar
                 //@ts-ignore
                 getRef={ref}
-                pages={["Men", "Women", "Accessories", "New In", "Disney", "Marvel", "Contact"]}
+                pages={pages}
                 logo_URL={Logo}
             />
 
@@ -64,6 +71,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
     const { pid } = context.query
 
     const { shopify, session } = await shopifyInit();
+    const userSession = await getSession(context)
 
     if (pid === undefined || Array.isArray(pid)) return {
         notFound: true
@@ -77,7 +85,8 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
 
     return {
         props: {
-            product: JSON.stringify(product)
+            product: JSON.stringify(product),
+            session: userSession
         },
     };
 }
