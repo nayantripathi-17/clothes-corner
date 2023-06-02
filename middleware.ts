@@ -4,7 +4,7 @@ import { NextRequest } from 'next/server';
 
 
 export const middleware = async (request: NextRequest) => {
-    const session = await getToken({ req: request, secret: process.env.JWT_SECRET, secureCookie: true }); 
+    const session = await getToken({ req: request, secret: process.env.JWT_SECRET }); 
     if (request.nextUrl.pathname.startsWith("/cart") && session === null) {
         return NextResponse.redirect(new URL("/", request.url));
     }
